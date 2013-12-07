@@ -4,6 +4,7 @@
 var test = require('tap').test
 var path = require('path');
 var mutiny = require('../')
+var sort = require('./util/sort-entries');
 
 function toUpper(file, content, cb) {
   cb(null, content.toUpperCase());  
@@ -38,7 +39,7 @@ test('\nrunning upperCase transform', function (t) {
     .on('data', [].push.bind(data))
     .on('end', function () {
       t.deepEqual(
-          data
+          sort(data)
         , [ { file: '/Users/thlorenz/dev/js/projects/mutiny/test/fixtures/root/index.html',
             content: '<HTML>\n  <BODY>\n    <H1>INDEX</H1>  \n  </BODY>\n</HTML>\n' },
           { file: '/Users/thlorenz/dev/js/projects/mutiny/test/fixtures/root/sub1/one.html',
@@ -59,7 +60,7 @@ test('\nrunning upperCase and trimLeading transforms', function (t) {
     .on('data', [].push.bind(data))
     .on('end', function () {
       t.deepEqual(
-          data
+          sort(data)
         , [ { file: '/Users/thlorenz/dev/js/projects/mutiny/test/fixtures/root/index.html',
               content: '<HTML>\n<BODY>\n<H1>INDEX</H1>  \n</BODY>\n</HTML>\n' },
             { file: '/Users/thlorenz/dev/js/projects/mutiny/test/fixtures/root/sub1/one.html',
@@ -79,7 +80,7 @@ test('\nrunning error prone upperCase and trimLeading transforms', function (t) 
   mutiny({ root: root }, [ toUpperError, trimLeading ])
     .on('error', function (err) {
       t.deepEqual(
-          data
+          sort(data)
         , [ { file: '/Users/thlorenz/dev/js/projects/mutiny/test/fixtures/root/index.html',
               content: '<HTML>\n<BODY>\n<H1>INDEX</H1>  \n</BODY>\n</HTML>\n' },
             { file: '/Users/thlorenz/dev/js/projects/mutiny/test/fixtures/root/sub1/one.html',
