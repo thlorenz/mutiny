@@ -2,7 +2,17 @@
 
 var readdirp    =  require('readdirp');
 var through     =  require('through2');
-var PassThrough =  require('stream').PassThrough;
+var PassThrough =  require('stream').PassThrough || (
+  function () { 
+    try {
+      return require('readable-stream').PassThrough;
+    } catch (e) {
+      console.error('You are using a version of node whose streams are incompatible with mutiny.');
+      console.error('As a workaround please: npm install readable-stream');
+      process.exit(1);
+    }
+  })();
+
 var fs          =  require('fs');
 var asyncreduce =  require('asyncreduce');
 
