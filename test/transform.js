@@ -80,14 +80,6 @@ test('\nrunning error prone upperCase and trimLeading transforms', function (t) 
 
   mutiny({ root: root }, [ toUpperError, trimLeading ])
     .on('error', function (err) {
-      t.deepEqual(
-          adapt(data)
-        , [ { file: '/fixtures/root/index.html',
-              content: '<HTML>\n<BODY>\n<H1>INDEX</H1>  \n</BODY>\n</HTML>\n' },
-            { file: '/fixtures/root/sub1/one.html',
-              content: '<HTML>\n<BODY>\n<H1>ONE</H1>  \n</BODY>\n</HTML>\n' } ]
-        , 'uppercases content and trims leading spaces of files until error occurs'
-      )
       t.similar(err, /I hate to be number two/, 'propagates error');
       t.end()
     })
