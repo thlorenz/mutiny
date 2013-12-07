@@ -1,7 +1,12 @@
 'use strict';
 
-var readdirp    =  require('readdirp');
-var through     =  require('through2');
+var readdirp =  require('readdirp')
+  , fs       =  require('fs')
+  , path     =  require('path')
+  , through  =  require('through2')
+  , combine  =  require('stream-combiner')
+  , mkdirp   =  require('mkdirp')
+
 var PassThrough =  require('stream').PassThrough || (
   function () { 
     try {
@@ -13,65 +18,88 @@ var PassThrough =  require('stream').PassThrough || (
     }
   })();
 
-var fs          =  require('fs');
-var asyncreduce =  require('asyncreduce');
-
-function contentNpath(entry, enc, cb) {
-
+function outForFiles(getOutStream, outdir) {
   // Filter directories
   // We cannot use readdirp directory filter since that would also prevent it from recursing into the filtered directories.
   // Instead we want to allow user to specify these limits, but in the end we are only interested in the files
-  if (!entry.stat.isFile()) return cb();
 
-  var self = this;
-  var fp = entry.fullPath;
+  return function(entry, enc, cb) {
+    if (!entry.stat.isFile()) return cb();
 
-  fs.readFile(fp, 'utf8', function (err, src) {
-    if (err) return cb(err);
-    self.push({ file: fp, relative: entry.path, content: src });
+    var outfile = outdir ? path.join(outdir, entry.path) : null
+      , outStream = getOutStream(outfile, outdir, entry.relative);
+
+    this.push({ file: entry.fullPath, outStream: outStream });
     cb();
-  });
+  }
 }
 
+function transformStream(transforms) {
+  return transforms && transforms.length
+    ? function (file) {
+        var streams = transforms.map(function (t) { return t(file) });
+        var combined = combine.apply(null, streams);
+        combined._writableState.decodeStrings = false;
+        return combined;
+      }
+    : function (file) { return through() };
+}
 
 function transformContent(transforms) {
-  function runTransforms(entry, enc, cb) {
-    var self = this;
-
-    asyncreduce(
-        transforms
-      , entry
-      , function (entry, fn, cb_) {
-          fn(entry.file, entry.content,  function (err, content) {
-            if (err) return cb_(err);
-            entry.content = content;
-            cb_(null, entry);
-          })
-        }
-      , function (err, entry) {
-          if (err) return cb(err);
-          self.push(entry);
-          cb();
-        }
-    )
+  var ts = transformStream(transforms);
+  return function (entry, enc, cb) {
+    fs.createReadStream(entry.file, { encoding: 'utf8' })
+      .on('error', cb)
+      .pipe(ts(entry.file))
+      .on('error', cb)
+      .on('end', cb)
+      .pipe(entry.outStream);
   }
-
-  function noop (entry, enc, cb) { 
-    this.push(entry);
-    cb();
-  }
-
-  return transforms && transforms.length ? runTransforms : noop;
 }
 
-var go = module.exports = function(readopts, transforms, rename) {
-  var stream = new PassThrough({ objectMode: true });
-  if (transforms) transforms = Array.isArray(transforms) ? transforms : [ transforms ];
+function getOutStreamFor(rename, outfile, outdir, relative) {
+  outfile = rename(outfile); 
+  var dir = path.dirname(outfile)
+    , stream = new PassThrough();
+
+  mkdirp(dir, function (err) {
+    if (err) return stream.emit('error', err);
+    fs.writeFileStream(outfile, { encoding:'utf8' })
+      .on('error', stream.bind(stream, 'error'))
+      .pipe(stream);
+  });
+
+  return stream;
+}
+
+function keepName(outfile, outdir, relative) { return outfile }
+
+var go = module.exports = function(mutinyopts, readopts) {
+  var transforms
+    , outdir = mutinyopts.outdir
+    , stream = new PassThrough({ objectMode: true });
+
+  readopts = readopts || {}
+
+  if (!outdir && !mutinyopts.getOutStream) {
+    stream.emit('error', new Error('Need to supply the outdir option (full path to where to store transformed files) when using defatul outStream..'));
+  }
+
+  if (mutinyopts.getOutStream && mutinyopts.rename) {
+    stream.emit('error', new Error('If you already supply the outstream it doesn\'t make any sense to also supply a rename function'));
+  }
+
+  var rename = mutinyopts.rename || keepName;
+  var getOutStream = mutinyopts.getOutStream || getOutStreamFor.bind(null, rename)
+
+  if (mutinyopts.transforms) {
+    transforms = Array.isArray(mutinyopts.transforms) ? mutinyopts.transforms : [ mutinyopts.transforms ];
+  }
 
   readdirp(readopts)
     .on('warn', stream.emit.bind(stream, 'warn'))
     .on('error', stream.emit.bind(stream, 'error'))
-    .pipe(through({ objectMode: true }, contentNpath))
+    .pipe(through({ objectMode: true }, outForFiles(getOutStream, outdir)))
     .pipe(through({ objectMode: true }, transformContent(transforms)))
     .on('error', stream.emit.bind(stream, 'error'))
     .pipe(stream);
@@ -83,21 +111,29 @@ function inspect(obj, depth) {
   console.error(require('util').inspect(obj, false, depth || 5, true));
 }
 
-function toUpper(file, content, cb) {
-  cb(null, content.toUpperCase());  
+function toUpper(file, content) {
+  return through(
+    function (chunk, enc, cb) {
+      this.push(chunk.toUpperCase());
+      cb();
+    }
+  )
 }
 
 function trimLeading(file, content, cb) {
   var c = content.replace(/^\s+/mg, '');
-  //cb(new Error('oh my god'));
   cb(null, c);
 }
+
+function getStdOut () { return process.stdout }
 
 // Test
 if (!module.parent && typeof window === 'undefined') {
   var path = require('path');
   var root = path.join(__dirname, 'test', 'fixtures', 'root');
-  go({ root: root }, [ toUpper, trimLeading ])
+
+
+  go({ getOutStream: getStdOut, transforms: [ toUpper ] }, { root: root })
     .on('data', function (data) {
       console.log('data', data);  
     })
