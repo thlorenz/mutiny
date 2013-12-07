@@ -64,9 +64,11 @@ function getOutStreamFor(rename, outfile, outdir, relative) {
 
   mkdirp(dir, function (err) {
     if (err) return stream.emit('error', err);
-    fs.writeFileStream(outfile, { encoding:'utf8' })
-      .on('error', stream.bind(stream, 'error'))
-      .pipe(stream);
+
+    var out = fs.createWriteStream(outfile, { encoding:'utf8' })
+    stream
+      .pipe(out)
+      .on('error', stream.emit.bind(stream, 'error'))
   });
 
   return stream;
@@ -82,7 +84,7 @@ var go = module.exports = function(mutinyopts, readopts) {
   readopts = readopts || {}
 
   if (!outdir && !mutinyopts.getOutStream) {
-    stream.emit('error', new Error('Need to supply the outdir option (full path to where to store transformed files) when using defatul outStream..'));
+    stream.emit('error', new Error('Need to supply the outdir option (full path to where to store transformed files) or provide custom outStream function.'));
   }
 
   if (mutinyopts.getOutStream && mutinyopts.rename) {
@@ -100,6 +102,7 @@ var go = module.exports = function(mutinyopts, readopts) {
     .on('warn', stream.emit.bind(stream, 'warn'))
     .on('error', stream.emit.bind(stream, 'error'))
     .pipe(through({ objectMode: true }, outForFiles(getOutStream, outdir)))
+    .on('error', stream.emit.bind(stream, 'error'))
     .pipe(through({ objectMode: true }, transformContent(transforms)))
     .on('error', stream.emit.bind(stream, 'error'))
     .pipe(stream);
@@ -130,10 +133,12 @@ function getStdOut () { return process.stdout }
 // Test
 if (!module.parent && typeof window === 'undefined') {
   var path = require('path');
-  var root = path.join(__dirname, 'test', 'fixtures', 'root');
+  var fixtures = path.join(__dirname, 'test', 'fixtures')
+  var root = path.join(fixtures, 'root');
+  var outdir = path.join(fixtures, 'out');
 
 
-  go({ getOutStream: getStdOut, transforms: [ toUpper ] }, { root: root })
+  go({ transforms: [ toUpper ], outdir: outdir }, { root: root })
     .on('data', function (data) {
       console.log('data', data);  
     })
