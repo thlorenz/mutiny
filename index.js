@@ -28,7 +28,7 @@ function contentNpath(entry, enc, cb) {
 
   fs.readFile(fp, 'utf8', function (err, src) {
     if (err) return cb(err);
-    self.push({ file: fp, content: src });
+    self.push({ file: fp, relative: entry.path, content: src });
     cb();
   });
 }
@@ -64,7 +64,7 @@ function transformContent(transforms) {
   return transforms && transforms.length ? runTransforms : noop;
 }
 
-var go = module.exports = function(readopts, transforms, renames) {
+var go = module.exports = function(readopts, transforms, rename) {
   var stream = new PassThrough({ objectMode: true });
   if (transforms) transforms = Array.isArray(transforms) ? transforms : [ transforms ];
 
