@@ -56,6 +56,7 @@ function transformContent(transforms) {
 
 var go = module.exports = function(readopts, transforms, renames) {
   var stream = new PassThrough({ objectMode: true });
+  if (transforms) transforms = Array.isArray(transforms) ? transforms : [ transforms ];
 
   readdirp(readopts)
     .on('warn', stream.emit.bind(stream, 'warn'))
