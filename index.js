@@ -56,10 +56,10 @@ function transformStream(progress, transforms) {
         var streams = transforms.map(function (t) { 
           var s = t(file);
           ensureNoStringDecode(s);
-          return s.on('error', onerror);
+          return s;
         });
 
-        var combined = combine.apply(null, streams).on('error', onerror);
+        var combined = combine.apply(null, streams);
         return combined;
       }
     : function (file) { return through() };
@@ -176,7 +176,7 @@ function trimLeading(file, content, cb) {
   return through(ondata, onend);
 }
 
-function getStdOut () { return process.stdout }
+function getStdOut (file) { return process.stdout }
 
 // Test
 if (!module.parent && typeof window === 'undefined') {

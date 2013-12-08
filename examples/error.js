@@ -1,21 +1,47 @@
 'use strict';
 
 var path = require('path');
+var through = require('through2');
 var mutiny = require('../');
 
 function toUpper(file, content, cb) {
-  if ((/two/mg).test(content)) return cb(new Error('I hate to be number two!'));
-  cb(null, content.toUpperCase());  
+  return through(
+    function (chunk, enc, cb) {
+      if ((/two/mg).test(chunk)) return cb(new Error('I hate to be number two!'));
+      this.push(chunk.toUpperCase());
+      cb();
+    }
+  )
 }
 
 function trimLeading(file, content, cb) {
-  var c = content.replace(/^\s+/mg, '');
-  cb(null, c);
+  var data = '';
+
+  function ondata(chunk, enc, cb) {
+    data += chunk;
+    cb();
+  }
+
+  function onend(cb) {
+    var c = data.replace(/^\s+/mg, '');
+    this.push(c);
+    cb();
+  }
+
+  return through(ondata, onend);
 }
 
 var root = path.join(__dirname, '..', 'test', 'fixtures', 'root');
 var transforms = [ toUpper, trimLeading ];
 
-mutiny({ root: root }, transforms)
+function getStdOut (file) { return process.stdout }
+
+var root = path.join(__dirname, '..', 'test', 'fixtures', 'root');
+var transforms = [ toUpper, trimLeading ];
+
+mutiny({ getOutStream: getStdOut, transforms: transforms }, { root: root })
   .on('error', console.error)
-  .on('data', console.log)
+  .on('data', function (d) {
+    console.log('\nProcessed:\n', d);
+    console.log('=====================================================\n');
+  })
