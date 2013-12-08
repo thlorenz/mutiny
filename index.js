@@ -19,7 +19,7 @@ function keepName(outfile, outdir, relative) { return outfile }
  *  - {String} outdir: the root of the directory to which to write the transformed/renamed files
  *  - {Array[fn:TransformStream]}  transforms: that transform each file's content
  *      signature: function({String} file) : {TransformStream}
- *  - {Function} rename: that rename each file
+ *  - {Function} rename: renames each file
  *      signature: function ({String} outfile, {String} outdir, {String} relativeOutfile) : {String} outfile
  *  - {Function} getOutStream: allows overriding the defaultOutStream in case @see rename is not sufficient
  *      signature: function ({String} outfile, {String} outdir, {String} relativeOutfile) : {WriteStream}
