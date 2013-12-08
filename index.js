@@ -46,22 +46,27 @@ function ensureNoStringDecode(s) {
   }
 }
 
-function transformStream(transforms) {
+function transformStream(progress, transforms) {
+  function onerror(err) {
+    progress.emit('error', err);
+  }
+
   return transforms && transforms.length
     ? function (file) {
         var streams = transforms.map(function (t) { 
-          var s = t(file) 
+          var s = t(file);
           ensureNoStringDecode(s);
-          return s;
+          return s.on('error', onerror);
         });
-        var combined = combine.apply(null, streams);
+
+        var combined = combine.apply(null, streams).on('error', onerror);
         return combined;
       }
     : function (file) { return through() };
 }
 
-function transformContent(transforms) {
-  var ts = transformStream(transforms);
+function transformContent(progress, transforms) {
+  var ts = transformStream(progress, transforms);
   return function (entry, enc, cb) {
     var self = this;
 
@@ -123,7 +128,7 @@ var go = module.exports = function(mutinyopts, readopts) {
     .on('error', progress.emit.bind(progress, 'error'))
     .pipe(through({ objectMode: true }, outForFiles(getOutStream, outdir)))
     .on('error', progress.emit.bind(progress, 'error'))
-    .pipe(through({ objectMode: true }, transformContent(transforms)))
+    .pipe(through({ objectMode: true }, transformContent(progress, transforms)))
     .on('error', progress.emit.bind(progress, 'error'))
     .on('end', progress.emit.bind(progress, 'end'))
     .pipe(progress);
@@ -138,7 +143,16 @@ function inspect(obj, depth) {
 function toUpper(file, content) {
   return through(
     function (chunk, enc, cb) {
-      console.log('encoding', enc);
+      this.push(chunk.toUpperCase());
+      cb();
+    }
+  )
+}
+
+function toUpperError(file, content, cb) {
+  return through(
+    function (chunk, enc, cb) {
+      if ((/two/mg).test(chunk)) return cb(new Error('I hate to be number two!'));
       this.push(chunk.toUpperCase());
       cb();
     }
@@ -149,7 +163,6 @@ function trimLeading(file, content, cb) {
   var data = '';
 
   function ondata(chunk, enc, cb) {
-    console.log('trim-encoding', enc);
     data += chunk;
     cb();
   }
@@ -172,8 +185,7 @@ if (!module.parent && typeof window === 'undefined') {
   var root = path.join(fixtures, 'root');
   var outdir = path.join(fixtures, 'out');
 
-
-  go({ transforms: [ trimLeading, toUpper ], getOutStream: getStdOut, outdir: outdir }, { root: root })
+  go({ transforms: [ toUpperError ], getOutStream: getStdOut, outdir: outdir }, { root: root })
     .on('data', function (data) {
       console.log(data);  
     })

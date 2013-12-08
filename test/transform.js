@@ -24,6 +24,11 @@ function toUpperError(file, content, cb) {
       cb();
     }
   )
+  // definitely handling it here, so why does it go undhandled ???
+  // see test at bottom
+  .on('error', function (err) {
+    console.error('E', err);  
+  });
 }
 
 function trimLeading(file, content, cb) {
@@ -102,7 +107,6 @@ test('\nrunning toUpper and then trimLeading transforms', function (t) {
 test('\nrunning trimLeading and then toUpper transforms', function (t) {
   var progress = []
 
-  // TODO: passing transforms in opposite order fails due to decodeStrings not properly applying -- no clue why
   mutiny({ getOutStream: getStdOut, transforms: [ trimLeading, toUpper ] }, { root: root })
     .on('error', fail.bind(t))
     .on('data', [].push.bind(progress))
@@ -122,6 +126,7 @@ test('\nrunning trimLeading and then toUpper transforms', function (t) {
 })
 
 
+// TODO:  Not sure why these errors go unhandled even though now I'm actually handling it right when creating the transform
 /*test('\nrunning error prone upperCase and trimLeading transforms', function (t) {
   var progress = []
 
@@ -131,5 +136,5 @@ test('\nrunning trimLeading and then toUpper transforms', function (t) {
       t.end()
     })
     .on('data', [].push.bind(progress))
-    .on('end', fail.bind(t));
+    .on('end', fail.bind(null, t));
 })*/
