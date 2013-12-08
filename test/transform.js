@@ -5,8 +5,11 @@ var test = require('tap').test
 var path = require('path');
 var through = require('through2');
 var mutiny = require('../')
-var adapt = require('./util/adapt-entries');
-var relative = require('./util/relative');
+
+var adapt = require('./util/adapt-entries')
+  , relative = require('./util/relative')
+  , fail = require('./util/fail')
+  , accOut = require('./util/acc-out')
 
 function toUpper(file, content) {
   return through(
@@ -53,25 +56,11 @@ var fixtures = path.join(__dirname, '..', 'test', 'fixtures');
 var root = path.join(fixtures, 'root');
 var out = path.join(fixtures, 'out');
 
-function fail(t, err) {
-  t.fail(err); 
-  t.end();
-}
-
 function inspect(obj, depth) {
   console.error(require('util').inspect(obj, false, depth || 5, true));
 }
 
 function getStdOut () { return process.stdout }
-
-function accOut(data, file) {
-  file = relative(file);
-  if (!data[file]) data[file] = [];
-  return through(function (chunk, enc, cb) {
-    data[file].push(chunk.toString());  
-    cb();
-  })
-}
 
 test('\nrunning upperCase transform', function (t) {
   var progress = []
