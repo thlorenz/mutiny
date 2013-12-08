@@ -29,17 +29,32 @@ function outForFiles(getOutStream, outdir) {
     var outfile = outdir ? path.join(outdir, entry.path) : null
       , outStream = getOutStream(outfile, outdir, entry.relative);
 
-    this.push({ file: entry.fullPath, outStream: outStream });
+    this.push({ file: entry.fullPath, outfile: outfile, outStream: outStream });
     cb();
+  }
+}
+
+function ensureNoStringDecode(s) {
+  if (s._writableState) s._writableState.decodeStrings = false;
+
+  // Oh what an ugly hack :( , but somehow just setting decodeStrings fails in cases
+  // In particular test/transforms.js: "running trimLeading and then toUpper transforms" fails without this
+  var write_ = s._write.bind(s);
+  s._write = function (chunk, enc, cb) {
+    if (enc === 'utf8') write_(chunk, enc, cb);
+    else write_(chunk.toString(), 'utf8', cb);
   }
 }
 
 function transformStream(transforms) {
   return transforms && transforms.length
     ? function (file) {
-        var streams = transforms.map(function (t) { return t(file) });
+        var streams = transforms.map(function (t) { 
+          var s = t(file) 
+          ensureNoStringDecode(s);
+          return s;
+        });
         var combined = combine.apply(null, streams);
-        combined._writableState.decodeStrings = false;
         return combined;
       }
     : function (file) { return through() };
@@ -48,11 +63,16 @@ function transformStream(transforms) {
 function transformContent(transforms) {
   var ts = transformStream(transforms);
   return function (entry, enc, cb) {
+    var self = this;
+
     fs.createReadStream(entry.file, { encoding: 'utf8' })
       .on('error', cb)
       .pipe(ts(entry.file))
       .on('error', cb)
-      .on('end', cb)
+      .on('end', function () { 
+        self.push({ file: entry.file, outfile: entry.outfile });
+        cb();
+      })
       .pipe(entry.outStream);
   }
 }
@@ -79,16 +99,16 @@ function keepName(outfile, outdir, relative) { return outfile }
 var go = module.exports = function(mutinyopts, readopts) {
   var transforms
     , outdir = mutinyopts.outdir
-    , stream = new PassThrough({ objectMode: true });
+    , progress = new PassThrough({ objectMode: true });
 
   readopts = readopts || {}
 
   if (!outdir && !mutinyopts.getOutStream) {
-    stream.emit('error', new Error('Need to supply the outdir option (full path to where to store transformed files) or provide custom outStream function.'));
+    progress.emit('error', new Error('Need to supply the outdir option (full path to where to store transformed files) or provide custom outStream function.'));
   }
 
   if (mutinyopts.getOutStream && mutinyopts.rename) {
-    stream.emit('error', new Error('If you already supply the outstream it doesn\'t make any sense to also supply a rename function'));
+    progress.emit('error', new Error('If you already supply the outstream it doesn\'t make any sense to also supply a rename function'));
   }
 
   var rename = mutinyopts.rename || keepName;
@@ -99,15 +119,16 @@ var go = module.exports = function(mutinyopts, readopts) {
   }
 
   readdirp(readopts)
-    .on('warn', stream.emit.bind(stream, 'warn'))
-    .on('error', stream.emit.bind(stream, 'error'))
+    .on('warn', progress.emit.bind(progress, 'warn'))
+    .on('error', progress.emit.bind(progress, 'error'))
     .pipe(through({ objectMode: true }, outForFiles(getOutStream, outdir)))
-    .on('error', stream.emit.bind(stream, 'error'))
+    .on('error', progress.emit.bind(progress, 'error'))
     .pipe(through({ objectMode: true }, transformContent(transforms)))
-    .on('error', stream.emit.bind(stream, 'error'))
-    .pipe(stream);
+    .on('error', progress.emit.bind(progress, 'error'))
+    .on('end', progress.emit.bind(progress, 'end'))
+    .pipe(progress);
 
-  return stream;
+  return progress;
 };
 
 function inspect(obj, depth) {
@@ -117,6 +138,7 @@ function inspect(obj, depth) {
 function toUpper(file, content) {
   return through(
     function (chunk, enc, cb) {
+      console.log('encoding', enc);
       this.push(chunk.toUpperCase());
       cb();
     }
@@ -124,8 +146,21 @@ function toUpper(file, content) {
 }
 
 function trimLeading(file, content, cb) {
-  var c = content.replace(/^\s+/mg, '');
-  cb(null, c);
+  var data = '';
+
+  function ondata(chunk, enc, cb) {
+    console.log('trim-encoding', enc);
+    data += chunk;
+    cb();
+  }
+
+  function onend(cb) {
+    var c = data.replace(/^\s+/mg, '');
+    this.push(c);
+    cb();
+  }
+
+  return through(ondata, onend);
 }
 
 function getStdOut () { return process.stdout }
@@ -138,9 +173,9 @@ if (!module.parent && typeof window === 'undefined') {
   var outdir = path.join(fixtures, 'out');
 
 
-  go({ transforms: [ toUpper ], outdir: outdir }, { root: root })
+  go({ transforms: [ trimLeading, toUpper ], getOutStream: getStdOut, outdir: outdir }, { root: root })
     .on('data', function (data) {
-      console.log('data', data);  
+      console.log(data);  
     })
     .on('error', function (err) {
       console.error('error', err); 

@@ -2,11 +2,15 @@
 
 var path = require('path');
 
-module.exports = function relative(entries) {
+function relative(file) {
+  return file ? file.slice(path.join(__dirname, '..').length) : file;
+}
+
+module.exports = function relativeEntries(entries) {
   return entries.map(function(e) {
-    return {
-        file: e.file.slice(path.join(__dirname, '..').length)
-      , content: e.content
+    return { 
+        file: relative(e.file)
+      , outfile: relative(e.outfile)
     }
   })
 }
