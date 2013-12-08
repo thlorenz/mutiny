@@ -23,7 +23,7 @@ function keepName(outfile, outdir, relative) { return outfile }
  *      signature: function ({String} outfile, {String} outdir, {String} relativeOutfile) : {String} outfile
  *  - {Function} getOutStream: allows overriding the defaultOutStream in case @see rename is not sufficient
  *      signature: function ({String} outfile, {String} outdir, {String} relativeOutfile) : {WriteStream}
- * @param {Object} readopts options passed through to [readdirp](@link https://github.com/thlorenz/readdirp)
+ * @param {Object} readopts options passed through to [readdirp]{@link https://github.com/thlorenz/readdirp}
  *  - be sure to specify the `root` of the source directory here
  * @return {ReadStream} which emits 'error' and or 'data' to update mutiny's progress
  */

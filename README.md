@@ -34,27 +34,25 @@ mutiny ./root -t ./local-transform/toUpper.js -t trim-leading -o ./out
 
 ## API
 
-###**mutiny(mutinyopts, readopts)**
-```
-/**
- * Mutates the files of a directory recursively applying specified @see transforms and/or a @see rename function.
- * The transformed files are saved into the @see outdir and directory structure is maintained.
- * 
- * @name mutiny 
- * @function
- * @param {Object} mutinyopts with the following properties
- *  - {String} outdir: the root of the directory to which to write the transformed/renamed files
- *  - {Array[fn:TransformStream]}  transforms: that transform each file's content
- *      signature: function({String} file) : {TransformStream}
- *  - {Function} rename: that rename each file
- *      signature: function ({String} outfile, {String} outdir, {String} relativeOutfile) : {String} outfile
- *  - {Function} getOutStream: allows overriding the defaultOutStream in case @see rename is not sufficient
- *      signature: function ({String} outfile, {String} outdir, {String} relativeOutfile) : {WriteStream}
- * @param {Object} readopts options passed through to [readdirp](@link https://github.com/thlorenz/readdirp)
- *  - be sure to specify the `root` of the source directory here
- * @return {ReadStream} which emits 'error' and or 'data' to update mutiny's progress
- */
-```
+Mutates the files of a directory recursively applying specified @see transforms and/or a @see rename function.
+The transformed files are saved into the @see outdir and directory structure is maintained.
+
+### mutiny(mutinyopts, readopts)
+
+**params:**
+
+- mutinyopts *Object* with the following properties
+  - {String} outdir: the root of the directory to which to write the transformed/renamed files
+  - {Array[fn:TransformStream]}  transforms: that transform each file's content
+      signature: function({String} file) : {TransformStream}
+  - {Function} rename: that rename each file
+      signature: function ({String} outfile, {String} outdir, {String} relativeOutfile) : {String} outfile
+- readopts *Object* options passed through to [readdirp](https://github.com/thlorenz/readdirp)
+  - be sure to specify the `root` of the source directory here
+
+**returns:**
+
+*ReadStream* which emits 'error' and/or 'data' to update mutiny's progress
 
 ## More Examples
 
