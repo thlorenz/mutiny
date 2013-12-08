@@ -30,7 +30,9 @@
     "nave": "~0.4.3",
     "tap": "~0.4.3"
   },
-  "keywords": [],
+  "keywords": [
+    "transform", "mutate", "rename", "template", "generate", "scaffold", "directory", "project"
+  ],
   "author": {
     "name": "Thorsten Lorenz",
     "email": "thlorenz@gmx.de",
