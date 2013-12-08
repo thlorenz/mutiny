@@ -30,15 +30,20 @@ function trimLeading(file, content, cb) {
   return through(ondata, onend);
 }
 
-function getStdOut (file) { return process.stdout }
-
 var root = path.join(__dirname, '..', 'test', 'fixtures', 'root');
+var outdir = path.join(__dirname, 'out.transform-save-rename');
 var transforms = [ toUpper, trimLeading ];
 
-// we are overriding the getOutStream to redirect all output to stdout instead of saving to a file
-mutiny({ getOutStream: getStdOut, transforms: transforms }, { root: root })
+function rename(outfile, outdir, relative) {
+  var extlen = path.extname(outfile).length;
+  return outfile.slice(0, -extlen) + '.md';
+}
+
+// Our filter ensures we only transform html files
+// Our rename function changes the extension of all files from .html to .md
+// In case more control is needed, we can override the getOutStream function to direct the output to wherever we want
+mutiny({ outdir: outdir, rename: rename, transforms: transforms }, { root: root, fileFilter: '*.html' })
   .on('error', console.error)
   .on('data', function (d) {
     console.log('\nProcessed:\n', d);
-    console.log('=====================================================\n');
   })

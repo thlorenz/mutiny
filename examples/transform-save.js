@@ -30,15 +30,14 @@ function trimLeading(file, content, cb) {
   return through(ondata, onend);
 }
 
-function getStdOut (file) { return process.stdout }
-
 var root = path.join(__dirname, '..', 'test', 'fixtures', 'root');
+var outdir = path.join(__dirname, 'out.transform-save');
 var transforms = [ toUpper, trimLeading ];
 
-// we are overriding the getOutStream to redirect all output to stdout instead of saving to a file
-mutiny({ getOutStream: getStdOut, transforms: transforms }, { root: root })
+
+// not supplying custom getOutStream and no rename function will just save the files to the outdir
+mutiny({ outdir: outdir, transforms: transforms }, { root: root })
   .on('error', console.error)
   .on('data', function (d) {
     console.log('\nProcessed:\n', d);
-    console.log('=====================================================\n');
   })
