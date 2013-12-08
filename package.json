@@ -1,6 +1,6 @@
 {
   "name": "mutiny",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Recursively mutates files in a given directory.",
   "main": "index.js",
   "bin": {
@@ -31,7 +31,14 @@
     "tap": "~0.4.3"
   },
   "keywords": [
-    "transform", "mutate", "rename", "template", "generate", "scaffold", "directory", "project"
+    "transform",
+    "mutate",
+    "rename",
+    "template",
+    "generate",
+    "scaffold",
+    "directory",
+    "project"
   ],
   "author": {
     "name": "Thorsten Lorenz",
