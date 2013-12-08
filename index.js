@@ -7,17 +7,6 @@ var readdirp =  require('readdirp')
   , combine  =  require('stream-combiner')
   , mkdirp   =  require('mkdirp')
 
-var PassThrough =  require('stream').PassThrough || (
-  function () { 
-    try {
-      return require('readable-stream').PassThrough;
-    } catch (e) {
-      console.error('You are using a version of node whose streams are incompatible with mutiny.');
-      console.error('As a workaround please: npm install readable-stream');
-      process.exit(1);
-    }
-  })();
-
 function outForFiles(getOutStream, outdir) {
   // Filter directories
   // We cannot use readdirp directory filter since that would also prevent it from recursing into the filtered directories.
@@ -85,7 +74,7 @@ function transformContent(progress, transforms) {
 function getOutStreamFor(rename, outfile, outdir, relative) {
   outfile = rename(outfile); 
   var dir = path.dirname(outfile)
-    , stream = new PassThrough();
+    , stream = through();
 
   mkdirp(dir, function (err) {
     if (err) return stream.emit('error', err);
@@ -104,7 +93,7 @@ function keepName(outfile, outdir, relative) { return outfile }
 var go = module.exports = function(mutinyopts, readopts) {
   var transforms
     , outdir = mutinyopts.outdir
-    , progress = new PassThrough({ objectMode: true });
+    , progress = through({ objectMode: true });
 
   readopts = readopts || {}
 

@@ -28,8 +28,7 @@
   },
   "devDependencies": {
     "nave": "~0.4.3",
-    "tap": "~0.4.3",
-    "readable-stream": "~1.1.9"
+    "tap": "~0.4.3"
   },
   "keywords": [],
   "author": {
