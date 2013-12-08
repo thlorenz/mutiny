@@ -1,10 +1,6 @@
 'use strict';
 
-var path = require('path');
-
-function relative(file) {
-  return file ? file.slice(path.join(__dirname, '..').length) : file;
-}
+var relative = require('./relative');
 
 module.exports = function relativeEntries(entries) {
   return entries.map(function(e) {
