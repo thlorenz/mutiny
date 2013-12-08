@@ -34,10 +34,10 @@ mutiny ./root -t ./local-transform/toUpper.js -t trim-leading -o ./out
 
 ## API
 
+### mutiny(mutinyopts, readopts)
+
 Mutates the files of a directory recursively applying specified @see transforms and/or a @see rename function.
 The transformed files are saved into the @see outdir and directory structure is maintained.
-
-### mutiny(mutinyopts, readopts)
 
 **params:**
 
