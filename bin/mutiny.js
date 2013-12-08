@@ -10,7 +10,10 @@ var fs      =  require('fs');
 var through =  require('through2');
 var mkdirp  =  require('mkdirp');
 var mutiny  =  require('../');
-var argv    =  require('minimist')(process.argv.slice(2));
+var argv    =  require('minimist')(
+    process.argv.slice(2)
+  , { 'boolean': [ 'v' ] }
+)
 
 function requireFile(file) {
   return (/^[.\/]/).test(file)
@@ -23,6 +26,7 @@ var filter = argv.f;
 var root = argv._[0] && path.resolve(argv._[0]);
 var outdir = argv.o && path.resolve(argv.o);
 var rename = argv.r && requireFile(argv.r);
+var verbose = argv.v || argv.verbose;
 
 if (!outdir)  throw new Error('Need to specify output dir via -o');
 if (!root)    throw new Error('Need to specify root dir i.e. ./root');
@@ -37,22 +41,19 @@ function inspect(obj, depth) {
 // from examples/bin
 // mutiny  -t ./local-transform/toUpper.js -t trim-leading -o ../../test/fixtures/mutinied  ../../test/fixtures/root/
 
-inspect({ transforms: transforms, rename: rename, root: root, outdir: outdir })
+if (verbose) inspect({ transforms: transforms, rename: rename, root: root, outdir: outdir })
 
 mkdirp(outdir, function (err) {
   if (err) process.exit(err);
-  mutiny({ root: root, fileFilter: filter }, transforms, rename)
+  mutiny(
+        { transforms: transforms, rename: rename, outdir: outdir }
+      , { root: root, fileFilter: filter }
+    )
     .on('error', console.error)
-    .pipe(through({ objectMode: true }, function (entry, enc, cb) {
-      var p = path.join(outdir, entry.relative)
-        , dir = path.dirname(p);
-
-      mkdirp(dir, function (err) {
-        if (err) return cb(err);
-        fs.writeFile(p, entry.content, 'utf8', cb);
-      });
-
-    }))
+    .on('data', function (entry) {
+      if (verbose) inspect({ processed: entry });
+      else process.stderr.write('.');
+    })
     .on('error', console.error)
-    .on('end', function () { console.log('Done') })
+    .on('end', function () { console.error('\nSuccess: all files processed.') })
 });

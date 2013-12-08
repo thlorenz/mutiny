@@ -130,7 +130,6 @@ var go = module.exports = function(mutinyopts, readopts) {
     .on('error', progress.emit.bind(progress, 'error'))
     .pipe(through({ objectMode: true }, transformContent(progress, transforms)))
     .on('error', progress.emit.bind(progress, 'error'))
-    .on('end', progress.emit.bind(progress, 'end'))
     .pipe(progress);
 
   return progress;

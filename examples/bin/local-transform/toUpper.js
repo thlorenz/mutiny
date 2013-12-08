@@ -1,5 +1,12 @@
 'use strict';
 
-module.exports = function toUpper(file, content, cb) {
-  cb(null, content.toUpperCase());  
+var through = require('through2');
+
+module.exports = function toUpper(file, content) {
+  return through(
+    function (chunk, enc, cb) {
+      this.push(chunk.toUpperCase());
+      cb();
+    }
+  )
 }
