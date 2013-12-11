@@ -37,7 +37,7 @@ test('\nrunning upperCase transform and renaming each outfile', function (t) {
     , data = {}
 
   mutiny(
-      { getOutStream: accOut.bind(null, data), outdir: out, transforms: toUpper, rename: rename, __allow_out_and_rename__: true }
+      { getOutStream: accOut.bind(null, data), outdir: out, transform: toUpper, rename: rename, __allow_out_and_rename__: true }
     , { root: root }
     )
     .on('error', fail.bind(t))

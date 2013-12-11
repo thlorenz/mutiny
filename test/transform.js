@@ -66,7 +66,7 @@ test('\nrunning upperCase transform', function (t) {
   var progress = []
     , data = {}
 
-  mutiny({ getOutStream: accOut.bind(null, data), outdir: out, transforms: toUpper }, { root: root })
+  mutiny({ getOutStream: accOut.bind(null, data), outdir: out, transform: toUpper }, { root: root })
     .on('error', fail.bind(t))
     .on('data', [].push.bind(progress))
     .on('end', function () {
@@ -98,7 +98,7 @@ test('\nrunning toUpper and then trimLeading transforms', function (t) {
   var progress = []
     , data = {}
 
-  mutiny({ getOutStream: accOut.bind(null, data), outdir: out, transforms: [ toUpper, trimLeading ] }, { root: root })
+  mutiny({ getOutStream: accOut.bind(null, data), outdir: out, transform: [ toUpper, trimLeading ] }, { root: root })
     .on('error', fail.bind(t))
     .on('data', [].push.bind(progress))
     .on('end', function () {
@@ -130,7 +130,7 @@ test('\nrunning trimLeading and then toUpper transforms', function (t) {
   var progress = []
     , data = {}
 
-  mutiny({ getOutStream: accOut.bind(null, data), outdir: out, transforms: [ trimLeading, toUpper ] }, { root: root })
+  mutiny({ getOutStream: accOut.bind(null, data), outdir: out, transform: [ trimLeading, toUpper ] }, { root: root })
     .on('error', fail.bind(t))
     .on('data', [].push.bind(progress))
     .on('end', function () {
@@ -162,7 +162,7 @@ test('\nrunning trimLeading and then toUpper transforms', function (t) {
 /*test('\nrunning error prone upperCase and trimLeading transforms', function (t) {
   var progress = []
 
-  mutiny({ getOutStream: getStdOut, transforms: toUpperError }, { root: root })
+  mutiny({ getOutStream: getStdOut, transform: toUpperError }, { root: root })
     .on('error', function (err) {
       t.similar(err, /I hate to be number two/, 'propagates error');
       t.end()

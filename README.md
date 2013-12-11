@@ -16,11 +16,11 @@ function toUpper(file, content) {
 }
 
 var readdirpOpts = { root: __dirname + '/root' };
-mutiny({ outdir: __dirname + '/out', transforms: [ toUpper ]}, readdirpOpts)
+mutiny({ outdir: __dirname + '/out', transform: [ toUpper ]}, readdirpOpts)
   .on('error', console.error)
   .on('data', function (d) { console.log('\nProcessed:\n', d); })
 ```
-[transforms example](https://github.com/thlorenz/mutiny/tree/master/examples/transform-only.js)
+[transform example](https://github.com/thlorenz/mutiny/tree/master/examples/transform-only.js)
 
 ```sh
 # assuming trim-leading is a transform installed as a node_module
@@ -36,7 +36,7 @@ mutiny ./root -t ./local-transform/toUpper.js -t trim-leading -o ./out
 
 ### mutiny(mutinyopts, readopts)
 
-Mutates the files of a directory recursively applying specified @see transforms and/or a @see rename function.
+Mutates the files of a directory recursively applying specified @see transform and/or a @see rename function.
 The transformed files are saved into the @see outdir and directory structure is maintained.
 
 #### params:
@@ -44,7 +44,7 @@ The transformed files are saved into the @see outdir and directory structure is 
 ##### mutinyopts *Object* with the following properties
 
 - {String} **outdir**: the root of the directory to which to write the transformed/renamed files
-- {Array[fn:TransformStream]} **transforms**: that transform each file's content
+- {Array[fn:TransformStream]} **transform**: that transform each file's content
   - *signature:* `function({String} file) : {TransformStream}`
 - {Function} **rename**: renames each file
   - *signature:* `function ({String} outfile, {String} outdir, {String} relativeOutfile) : {String} outfile`

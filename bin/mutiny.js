@@ -20,7 +20,7 @@ var filter  =  argv.f
 if (!outdir)  throw new Error('Need to specify output dir via -o');
 if (!root)    throw new Error('Need to specify root dir i.e. ./root');
 
-var transforms = [].concat(argv.t).filter(Boolean).map(function (file) { return requireModule(file) });
+var transform = [].concat(argv.t).filter(Boolean).map(function (file) { return requireModule(file) });
 
 function inspect(obj, depth) {
   console.error(require('util').inspect(obj, false, depth || 5, true));
@@ -30,10 +30,10 @@ function inspect(obj, depth) {
 // from examples/bin
 // mutiny  -t ./local-transform/toUpper.js -t trim-leading -o ../../test/fixtures/mutinied  ../../test/fixtures/root/
 
-if (verbose) inspect({ transforms: transforms, rename: rename, root: root, outdir: outdir })
+if (verbose) inspect({ transform: transform, rename: rename, root: root, outdir: outdir })
 
 mutiny(
-      { transforms: transforms, rename: rename, outdir: outdir }
+      { transform: transform, rename: rename, outdir: outdir }
     , { root: root, fileFilter: filter }
   )
   .on('error', console.error)

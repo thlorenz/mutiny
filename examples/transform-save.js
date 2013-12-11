@@ -32,11 +32,11 @@ function trimLeading(file, content, cb) {
 
 var root = path.join(__dirname, '..', 'test', 'fixtures', 'root');
 var outdir = path.join(__dirname, 'out.transform-save');
-var transforms = [ toUpper, trimLeading ];
+var transform = [ toUpper, trimLeading ];
 
 
 // not supplying custom getOutStream and no rename function will just save the files to the outdir
-mutiny({ outdir: outdir, transforms: transforms }, { root: root })
+mutiny({ outdir: outdir, transform: transform }, { root: root })
   .on('error', console.error)
   .on('data', function (d) {
     console.log('\nProcessed:\n', d);

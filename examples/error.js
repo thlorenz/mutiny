@@ -32,14 +32,14 @@ function trimLeading(file, content, cb) {
 }
 
 var root = path.join(__dirname, '..', 'test', 'fixtures', 'root');
-var transforms = [ toUpper, trimLeading ];
+var transform = [ toUpper, trimLeading ];
 
 function getStdOut (file) { return process.stdout }
 
 var root = path.join(__dirname, '..', 'test', 'fixtures', 'root');
-var transforms = [ toUpper, trimLeading ];
+var transform = [ toUpper, trimLeading ];
 
-mutiny({ getOutStream: getStdOut, transforms: transforms }, { root: root })
+mutiny({ getOutStream: getStdOut, transform: transform }, { root: root })
   .on('error', console.error)
   .on('data', function (d) {
     console.log('\nProcessed:\n', d);

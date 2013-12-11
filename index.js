@@ -10,14 +10,14 @@ var defaultGetOutStream = require('./lib/default-getOutStream')
 function keepName(outfile, outdir, relative) { return outfile }
 
 /**
- * Mutates the files of a directory recursively applying specified @see transforms and/or a @see rename function.
+ * Mutates the files of a directory recursively applying specified @see transform and/or a @see rename function.
  * The transformed files are saved into the @see outdir and directory structure is maintained.
  * 
  * @name mutiny 
  * @function
  * @param {Object} mutinyopts with the following properties
  *  - {String} outdir: the root of the directory to which to write the transformed/renamed files
- *  - {Array[fn:TransformStream]}  transforms: that transform each file's content
+ *  - {Array[fn:TransformStream]}  transform: that transform each file's content
  *      signature: function({String} file) : {TransformStream}
  *  - {Function} rename: renames each file
  *      signature: function ({String} outfile, {String} outdir, {String} relativeOutfile) : {String} outfile
@@ -28,7 +28,7 @@ function keepName(outfile, outdir, relative) { return outfile }
  * @return {ReadStream} which emits 'error' and or 'data' to update mutiny's progress
  */
 var go = module.exports = function mutiny(mutinyopts, readopts) {
-  var transforms
+  var transform
     , outdir = mutinyopts.outdir
     , progress = through({ objectMode: true });
 
@@ -45,8 +45,8 @@ var go = module.exports = function mutiny(mutinyopts, readopts) {
   var rename = mutinyopts.rename || keepName;
   var getOutStream = mutinyopts.getOutStream || defaultGetOutStream 
 
-  if (mutinyopts.transforms) {
-    transforms = Array.isArray(mutinyopts.transforms) ? mutinyopts.transforms : [ mutinyopts.transforms ];
+  if (mutinyopts.transform) {
+    transform = Array.isArray(mutinyopts.transform) ? mutinyopts.transform : [ mutinyopts.transform ];
   }
 
   readdirp(readopts)
@@ -54,7 +54,7 @@ var go = module.exports = function mutiny(mutinyopts, readopts) {
     .on('error', progress.emit.bind(progress, 'error'))
     .pipe(through({ objectMode: true }, filterDirsAndResolveOutStream(getOutStream, rename, outdir)))
     .on('error', progress.emit.bind(progress, 'error'))
-    .pipe(through({ objectMode: true }, transformContent(progress, transforms)))
+    .pipe(through({ objectMode: true }, transformContent(progress, transform)))
     .on('error', progress.emit.bind(progress, 'error'))
     .pipe(progress);
 

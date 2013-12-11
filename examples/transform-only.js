@@ -33,10 +33,10 @@ function trimLeading(file, content, cb) {
 function getStdOut (file) { return process.stdout }
 
 var root = path.join(__dirname, '..', 'test', 'fixtures', 'root');
-var transforms = [ toUpper, trimLeading ];
+var transform = [ toUpper, trimLeading ];
 
 // we are overriding the getOutStream to redirect all output to stdout instead of saving to a file
-mutiny({ getOutStream: getStdOut, transforms: transforms }, { root: root })
+mutiny({ getOutStream: getStdOut, transform: transform }, { root: root })
   .on('error', console.error)
   .on('data', function (d) {
     console.log('\nProcessed:\n', d);
