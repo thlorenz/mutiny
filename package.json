@@ -1,6 +1,6 @@
 {
   "name": "mutiny",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "description": "Recursively mutates files in a given directory.",
   "main": "index.js",
   "bin": {
