@@ -18,8 +18,9 @@ function keepName(outfile, outdir, relative) { return outfile }
  * @function
  * @param {Object} mutinyopts with the following properties
  *  - {String} outdir: the root of the directory to which to write the transformed/renamed files
- *  - {Array[fn:TransformStream]}  transform: that transform each file's content
+ *  - {Array.<fn:TransformStream|String>} transform: that transform each file's content
  *      signature: function({String} file) : {TransformStream}
+ *    - alternatively each transform can be a name of an installed transform or a path to a local module
  *  - {Function} rename: renames each file
  *      signature: function ({String} outfile, {String} outdir, {String} relativeOutfile) : {String} outfile
  *  - {Function} getOutStream: allows overriding the defaultOutStream in case @see rename is not sufficient
