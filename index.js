@@ -1,7 +1,8 @@
 'use strict';
 
-var readdirp =  require('readdirp')
-  , through  =  require('through2')
+var readdirp      =  require('readdirp')
+  , through       =  require('through2')
+  , requireModule =  require('require-module')
 
 var defaultGetOutStream = require('./lib/default-getOutStream')
   , transformContent = require('./lib/transform-content')
@@ -46,7 +47,10 @@ var go = module.exports = function mutiny(mutinyopts, readopts) {
   var getOutStream = mutinyopts.getOutStream || defaultGetOutStream 
 
   if (mutinyopts.transform) {
-    transform = Array.isArray(mutinyopts.transform) ? mutinyopts.transform : [ mutinyopts.transform ];
+    transform = (Array.isArray(mutinyopts.transform) ? mutinyopts.transform : [ mutinyopts.transform ])
+      .map(function (tx) { 
+        return typeof tx === 'string' ? requireModule(tx) : tx;
+      })
   }
 
   readdirp(readopts)

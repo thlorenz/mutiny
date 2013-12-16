@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = function fail(t, err) {
-  t.fail(err); 
-  t.end();
+module.exports = function fail(err) {
+  this.fail(err); 
+  this.end();
 }

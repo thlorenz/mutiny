@@ -11,7 +11,7 @@ var adapt = require('./util/adapt-entries')
   , fail = require('./util/fail')
   , accOut = require('./util/acc-out')
 
-function toUpper(file, content) {
+function toUpper(file) {
   return through(
     function (chunk, enc, cb) {
       this.push(chunk.toUpperCase());
@@ -157,6 +157,39 @@ test('\nrunning trimLeading and then toUpper transforms', function (t) {
     });
 })
 
+test('\nrunning upperCase transform that was indicated via full string path', function (t) {
+  var progress = []
+    , data = {}
+
+  mutiny(
+      { getOutStream: accOut.bind(null, data), outdir: out, transform: __dirname + '/fixtures/to-upper.js' }
+    , { root: root })
+    .on('error', fail.bind(t))
+    .on('data', [].push.bind(progress))
+    .on('end', function () {
+
+      t.deepEqual(
+          adapt(progress)
+        , [ { file: '/fixtures/root/index.html',
+              outfile: '/fixtures/out/index.html' },
+            { file: '/fixtures/root/sub1/one.html',
+              outfile: '/fixtures/out/sub1/one.html' },
+            { file: '/fixtures/root/sub2/two.html',
+              outfile: '/fixtures/out/sub2/two.html' } ]
+        , 'reports progress for all files'
+      )
+
+      t.deepEqual(
+          data
+        , { '/fixtures/out/index.html': [ '<HTML>\n  <BODY>\n    <H1>INDEX</H1>  \n  </BODY>\n</HTML>\n' ],
+            '/fixtures/out/sub1/one.html': [ '<HTML>\n  <BODY>\n    <H1>ONE</H1>  \n  </BODY>\n</HTML>\n' ],
+            '/fixtures/out/sub2/two.html': [ '<HTML>\n  <BODY>\n    <H1>TWO</H1>  \n  </BODY>\n</HTML>\n' ] }
+        , 'applies transform and streams into out stream supplying correct file path'
+      )
+
+      t.end()
+    });
+})
 
 // TODO:  Not sure why these errors go unhandled even though now I'm actually handling it right when creating the transform
 /*test('\nrunning error prone upperCase and trimLeading transforms', function (t) {

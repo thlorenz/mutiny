@@ -4,7 +4,7 @@ var path = require('path');
 var through = require('through2');
 var mutiny = require('../');
 
-function toUpper(file, content) {
+function toUpper(file) {
   return through(
     function (chunk, enc, cb) {
       this.push(chunk.toUpperCase());
@@ -13,7 +13,7 @@ function toUpper(file, content) {
   )
 }
 
-function trimLeading(file, content, cb) {
+function trimLeading(file) {
   var data = '';
 
   function ondata(chunk, enc, cb) {

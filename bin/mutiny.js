@@ -4,7 +4,6 @@
 var path          =  require('path')
   , fs            =  require('fs')
   , mutiny        =  require('../')
-  , requireModule =  require('require-module')
 
 var argv    =  require('minimist')(
     process.argv.slice(2)
@@ -20,7 +19,7 @@ var filter  =  argv.f
 if (!outdir)  throw new Error('Need to specify output dir via -o');
 if (!root)    throw new Error('Need to specify root dir i.e. ./root');
 
-var transform = [].concat(argv.t).filter(Boolean).map(function (file) { return requireModule(file) });
+var transform = [].concat(argv.t).filter(Boolean);
 
 function inspect(obj, depth) {
   console.error(require('util').inspect(obj, false, depth || 5, true));

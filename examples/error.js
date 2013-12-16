@@ -4,7 +4,7 @@ var path = require('path');
 var through = require('through2');
 var mutiny = require('../');
 
-function toUpper(file, content, cb) {
+function toUpper(file) {
   return through(
     function (chunk, enc, cb) {
       if ((/two/mg).test(chunk)) return cb(new Error('I hate to be number two!'));
@@ -14,7 +14,7 @@ function toUpper(file, content, cb) {
   )
 }
 
-function trimLeading(file, content, cb) {
+function trimLeading(file) {
   var data = '';
 
   function ondata(chunk, enc, cb) {
